@@ -1,0 +1,118 @@
+1.Elegir un nombre para su lenguaje.
+
+2.Definición de la sintaxis mediante la CFG correspondiente.
+  lista de componentes léxicos o símbolos terminales
+  var
+  begin
+  end
+  real
+  string
+  if
+  then
+  else
+  while
+  do
+  read
+  write
+  and
+  or
+  not
+  extstring
+  find
+  length 
+  const
+    CANT_PALABRAS_RESERVADAS = 18;
+    PalabrasReservadas: array[1..CANT_PALABRAS_RESERVADAS] of string = (
+      'var', 'begin', 'end', 'real', 'string',
+      'if', 'then', 'else', 'while', 'do',
+      'read', 'write', 'and', 'or', 'not',
+      'extstring', 'find', 'length'
+    );
+
+3.Definición de los componentes léxicos (terminales de la CFG) mediante expresiones regulares (cuando su
+estructura lo justifique)
+  Letras = a|b|c|d|...|z
+  Digitos = 0|1|2|3|4|5|6|..|0
+  
+  Identificadores
+  id = L.(L|D)*
+  
+  Constantes numericas 
+  num = D.D´´.(e|(, . D.D* ))
+  
+  Constantes de Cadena
+  str_const = ".(∑-{"})*."
+
+4. Autómatas determinísticos para los componentes léxicos complejos.
+
+5. Especificación de la semántica asociada a cada variable de la CFG.
+   Estructura principal y declaraciones 
+  Explicacion:Acá definimos que el programa arranca con las declaraciones y sigue con el cuerpo principal. Fija la recursividad para poder declarar múltiples variables.
+  
+  <Programa>       ::= var <Declaraciones> begin <Sentencias> end
+  
+  <Declaraciones>  ::= <Declaracion> | <Declaracion> <Declaraciones>
+  <Declaracion>    ::= id : <Tipo> ;
+  <Tipo>           ::= real | string 
+  Bloque de Sentencias y Estructuras de Control
+  Explicacion:Acá agrupamos las acciones. El PDF exige que tu lenguaje soporte asignación, lectura, escritura, condicional (Si-Entonces-Sino) y ciclo (Mientras).
+  
+  <Sentencias>     ::= <Sentencia> | <Sentencia> <Sentencias>
+  <Sentencia>      ::= <Asignacion> | <Condicional> | <Ciclo> | <Lectura> | <Escritura>
+  
+  <Asignacion>     ::= id := <Expresion> ;
+  
+  <Condicional>    ::= if <Condicion> then begin <Sentencias> end <OpcionalElse>
+  <OpcionalElse>   ::= else begin <Sentencias> end | <Vacio>
+  <Vacio>          ::= 
+  
+  <Ciclo>          ::= while <Condicion> do begin <Sentencias> end 
+  Operaciones de Entrada y Salida (I/O)
+  Explicacion:Para cumplir con los puntos 6 y 7 del proyecto: la lectura pide un mensaje literal y la variable a guardar , y la escritura permite una lista separada por comas.
+  
+  <Lectura>        ::= read ( str_const , id ) ;
+  
+  <Escritura>      ::= write ( <ListaSalida> ) ;
+  <ListaSalida>    ::= <Expresion> | <Expresion> , <ListaSalida> 
+  Lógica Booleana (Condiciones)
+  Explicacion:El proyecto especifica que se deben permitir operadores lógicos (and, or, not) y relacionales (=, <>, <, >, <=, >=) para comparar números o cadenas. La estructura en "cascada" garantiza que el not se evalúe antes que el and, y el and antes que el or.
+  
+  <Condicion>      ::= <Condicion> or <TerminoCond> | <TerminoCond>
+  <TerminoCond>    ::= <TerminoCond> and <FactorCond> | <FactorCond>
+  <FactorCond>     ::= not <FactorCond> | ( <Condicion> ) | <Expresion> <OpRel> <Expresion>
+  
+  <OpRel>          ::= = | <> | < | > | <= | >= 
+  Expresiones Matemáticas y de Cadenas
+  Explicacion:prioridades matemáticas y que la asociatividad sea obligatoriamente por izquierda. En BNF, la "asociatividad por izquierda" se logra usando recursividad por izquierda.
+  
+  <Expresion>      ::= <Expresion> + <Termino> | <Expresion> - <Termino> | <Termino>
+  <Termino>        ::= <Termino> * <Factor> | <Termino> / <Factor> | <Factor>
+  <Factor>         ::= <Factor> ^ <Base> | <Base>
+  
+  <Base>           ::= id | num | str_const | ( <Expresion> ) | <Funcion>
+  
+  <Funcion>        ::= sqrt ( <Expresion> ) 
+                     | extstring ( <Expresion> , <Expresion> , <Expresion> ) 
+                     | find ( <Expresion> , <Expresion> ) 
+                     | length ( <Expresion> ) 
+
+6. Construcción del Intérprete:
+En ciencias de la computación, intérprete o interpretador es un programa informático capaz de analizar y ejecutar otros programas. 
+Los intérpretes se diferencian de los compiladores o de los ensambladores en que mientras estos traducen un programa desde su descripción en un lenguaje de programación al código de máquina del sistema, los intérpretes solo realizan la traducción a medida que sea necesaria, típicamente, instrucción por instrucción, y normalmente no guardan el resultado de dicha traducción.
+  6.1. Analizador Léxico.
+  Un analizador léxico o analizador lexicográfico (en inglés scanner o tokenizer) es la primera fase de un compilador, consistente en un programa que recibe como entrada el código fuente de otro programa (secuencia de caracteres) y produce una salida compuesta de tokens (componentes léxicos) o símbolos. 
+  Estos tokens sirven para una posterior etapa del proceso de traducción, siendo la entrada para el analizador sintáctico (en inglés parser).
+  
+  6.2. Analizador Sintáctico.
+  Un analizador sintáctico (en inglés parser) o simplemente analizador es un programa informático que analiza una cadena de símbolos según las reglas de una gramática formal. 
+  Usualmente hace uso de un compilador, en cuyo caso, transforma una entrada en un árbol sintáctico de derivación.
+  
+  6.3. Evaluador (ejecuta el programa, en base al árbol de análisis sintáctico).
+  El proyecto pide que el programa se ejecute "en base al árbol de análisis sintáctico". 
+  Esto significa que el Evaluador no lee texto, lee la estructura de punteros (el AST) que le entregó el Sintáctico, y la ejecuta usando la Tabla de Símbolos.
+
+7. Escriba un programa que lea una cadena y cuente cuántas vocales contiene. El resultado debe mostrarse por
+pantalla. El programa debe recorrer la cadena carácter por carácter.
+8. Escriba un programa que lea una cadena y determine si es un palíndromo. El resultado debe ser una cadena
+que diga "Es palíndromo" o "No es palíndromo".
+9. Escribir otro programa definido por el grupo. Escribir el enunciado, programar la solución y realizar pruebas.
